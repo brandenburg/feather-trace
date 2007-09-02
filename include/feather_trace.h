@@ -116,17 +116,17 @@ static inline unsigned long long ft_read_tsc(void)
 	return ret;
 }
 
-#if defined( _FT_USERSPACE_H_ ) && defined( _FT_LINUX_ )
+#if defined( FEATHER_DYNAMIC )
 
 #define ft_enable_event(id) ft_enable_event_linux(id)
 #define ft_disable_event(id) ft_disable_event_linux(id)
 #define ft_is_event_enabled(id) ft_is_event_enabled_linux(id)
 #define ft_disable_all_events() ft_disable_all_events_linux()
 
-int ft_enable_event_static(unsigned long id);
-int ft_disable_event_static(unsigned long id);
-int ft_is_event_enabled_static(unsigned long id);
-int ft_disable_all_events_static(void);
+int ft_enable_event_linux(unsigned long id);
+int ft_disable_event_linux(unsigned long id);
+int ft_is_event_enabled_linux(unsigned long id);
+int ft_disable_all_events_linux(void);
 
 #else
 

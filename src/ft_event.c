@@ -45,14 +45,15 @@ struct trace_event {
 extern struct trace_event  __start___event_table[];
 extern struct trace_event  __stop___event_table[];
 
-int ft_enable_event(unsigned long id) 
+int ft_enable_event_in_table(unsigned long id, 
+			     struct trace_event* te, /* start of table */
+			     struct trace_event* stop) 
 {
-	struct trace_event* te = __start___event_table;
 	int count = 0;
 	char* delta;
 	unsigned char* instr;
 
-	while (te < __stop___event_table) {
+	while (te < stop) {
 		if (te->id == id && ++te->count == 1) {
 			instr  = (unsigned char*) te->start_addr;
 			/* make sure we don't clobber something wrong */
@@ -68,14 +69,22 @@ int ft_enable_event(unsigned long id)
 	return count;
 }
 
-int ft_disable_all_events(void)
+int ft_enable_event_static(unsigned long id) 
 {
-	struct trace_event* te = __start___event_table;
+	return ft_enable_event_in_table(id,
+					__start___event_table,
+					__stop___event_table);
+}
+
+
+int ft_disable_all_events_in_table(struct trace_event* te, /* start of table */
+				   struct trace_event* stop) 
+{
 	int count = 0;
 	char* delta;
 	unsigned char* instr;
 
-	while (te < __stop___event_table) {
+	while (te < stop) {
 		if (te->count) {
 			instr  = (unsigned char*) te->start_addr;
 			if (*instr == BYTE_JUMP) {
@@ -92,15 +101,21 @@ int ft_disable_all_events(void)
 	return count;
 }
 
-
-int ft_disable_event(unsigned long id)
+int ft_disable_all_events_static(void)
 {
-	struct trace_event* te = __start___event_table;
+	return ft_disable_all_events_in_table(__start___event_table,
+					     __stop___event_table);	
+}
+
+int ft_disable_event_in_table(unsigned long id, 
+			      struct trace_event* te, /* start of table */
+			      struct trace_event* stop) 
+{
 	int count = 0;
 	char* delta;
 	unsigned char* instr;
 
-	while (te < __stop___event_table) {
+	while (te < stop) {
 		if (te->id == id && --te->count == 0) {
 			instr  = (unsigned char*) te->start_addr;
 			if (*instr == BYTE_JUMP) {
@@ -116,14 +131,30 @@ int ft_disable_event(unsigned long id)
 	return count;
 }
 
-int ft_is_event_enabled(unsigned long id)
+int ft_disable_event_static(unsigned long id)
 {
-	struct trace_event* te = __start___event_table;
+	return ft_disable_event_in_table(id, 
+					 __start___event_table,
+					 __stop___event_table);
+}
 
-	while (te < __stop___event_table) {
+int ft_is_event_enabled_in_table(unsigned long id,
+				 struct trace_event* te, /* start of table */
+				 struct trace_event* stop) 
+{
+	int count = 0;
+	while (te < stop) {
 		if (te->id == id)
-			return te->count;
+			count++;
 		te++;
 	}
-	return 0;
+	return count;
+}
+
+
+int ft_is_event_enabled_static(unsigned long id)
+{
+	return ft_is_event_enabled_in_table(id,
+					 __start___event_table,
+					 __stop___event_table); 
 }
