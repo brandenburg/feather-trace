@@ -20,3 +20,6 @@ int libcall(void)
 
         return 0;
 }
+
+void* global_ref = libcall;
+
