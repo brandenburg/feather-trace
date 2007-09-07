@@ -116,29 +116,116 @@ static inline unsigned long long ft_read_tsc(void)
 	return ret;
 }
 
+
+/*****************************************************************************/
+/*                                     API                                   */
+/*****************************************************************************/
+
+struct trace_event;
+
+int ft_is_event_enabled_in_table(unsigned long id,
+				 struct trace_event* te, /* start of table */
+				 struct trace_event* stop);
+
+int ft_disable_all_events_in_table(struct trace_event* te, /* start of table */
+				   struct trace_event* stop);
+
+int ft_disable_event_in_table(unsigned long id, 
+			      struct trace_event* te, /* start of table */
+			      struct trace_event* stop);
+
+int ft_enable_event_in_table(unsigned long id, 
+			     struct trace_event* te, /* start of table */
+			     struct trace_event* stop);
+
+#ifdef FEATHER_USERSPACE
+int init_ft_events_in_table(struct trace_event* start, struct trace_event* stop);
+
+#endif 
+
+
 #if defined( FEATHER_DYNAMIC )
+typedef  int (*iterator_fun_id_t)(unsigned long id,
+				struct trace_event* start,
+				struct trace_event* stop);
 
-#define ft_enable_event(id) ft_enable_event_linux(id)
-#define ft_disable_event(id) ft_disable_event_linux(id)
-#define ft_is_event_enabled(id) ft_is_event_enabled_linux(id)
-#define ft_disable_all_events() ft_disable_all_events_linux()
+typedef  int (*iterator_fun_t)(	struct trace_event* start,
+				struct trace_event* stop);
 
-int ft_enable_event_linux(unsigned long id);
-int ft_disable_event_linux(unsigned long id);
-int ft_is_event_enabled_linux(unsigned long id);
-int ft_disable_all_events_linux(void);
 
-#else
+int for_each_table_id(unsigned long id, iterator_fun_id_t fun);
+int for_each_table(iterator_fun_t fun);
 
-#define ft_enable_event(id) ft_enable_event_static(id)
-#define ft_disable_event(id) ft_disable_event_static(id)
-#define ft_is_event_enabled(id) ft_is_event_enabled_static(id)
-#define ft_disable_all_events() ft_disable_all_events_static()
+static inline int ft_enable_event(unsigned long id) 
+{
+	return for_each_table_id(id, ft_enable_event_in_table);
+}
 
-int ft_enable_event_static(unsigned long id);
-int ft_disable_event_static(unsigned long id);
-int ft_is_event_enabled_static(unsigned long id);
-int ft_disable_all_events_static(void);
+static inline int ft_disable_all_events(void)
+{
+	return for_each_table(ft_disable_all_events_in_table);
+}
+
+static inline int ft_disable_event(unsigned long id)
+{
+	return for_each_table_id(id, ft_disable_event_in_table);
+}
+
+static inline int ft_is_event_enabled(unsigned long id)
+{
+	return for_each_table_id(id, ft_is_event_enabled_in_table);
+}
+
+static inline int init_ft_events(void) 
+{
+	return for_each_table(init_ft_events_in_table);
+}
+
+#else /* FEATHER_STATIC  */
+
+/* In the static configuration, the event table symbol is available 
+ * at linking time.
+ */
+
+extern struct trace_event*  __start___event_table;
+extern struct trace_event*  __stop___event_table;
+
+static inline int ft_enable_event(unsigned long id) 
+{
+	return ft_enable_event_in_table(id,
+					__start___event_table,
+					__stop___event_table);
+}
+
+static inline int ft_disable_all_events(void)
+{
+	return ft_disable_all_events_in_table(__start___event_table,
+					      __stop___event_table);	
+}
+
+static inline int ft_disable_event(unsigned long id)
+{
+	return ft_disable_event_in_table(id, 
+					 __start___event_table,
+					 __stop___event_table);
+}
+
+static inline int ft_is_event_enabled(unsigned long id)
+{
+	return ft_is_event_enabled_in_table(id,
+					 __start___event_table,
+					 __stop___event_table); 
+}
+
+#ifdef FEATHER_USERSPACE
+
+static inline int init_ft_events(void) 
+{
+	return init_ft_events_in_table(__start___event_table, 
+				       __stop___event_table);
+}
+
+#endif
 
 #endif
 

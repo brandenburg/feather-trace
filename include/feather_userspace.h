@@ -9,30 +9,17 @@
 #define FEATHER_DYNAMIC
 #endif 
 
-
+#define FEATHER_USERSPACE
 #include "feather_trace.h"
 #include "feather_buffer.h"
 
 struct ft_buffer* alloc_ft_buffer(unsigned int slots, 
 				  unsigned int size);
 
-#ifdef FEATHER_DYNAMIC
-
-int init_ft_events_linux(void);
-
-#define init_ft_events() init_ft_events_linux()
-
-#else
-
-int init_ft_events_static(void);
-
-#define init_ft_events() init_ft_events_static()
-
-#endif
 
 #define INIT_FT_EVENTS()				\
 	if (!init_ft_events()) {			\
-		perror("could not init unc events");	\
+		perror("could not init ft events");	\
 		exit(1);				\
 	}
 

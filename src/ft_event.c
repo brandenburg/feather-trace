@@ -42,9 +42,6 @@ struct trace_event {
 	long	end_addr;
 };
 
-extern struct trace_event  __start___event_table[];
-extern struct trace_event  __stop___event_table[];
-
 int ft_enable_event_in_table(unsigned long id, 
 			     struct trace_event* te, /* start of table */
 			     struct trace_event* stop) 
@@ -69,14 +66,6 @@ int ft_enable_event_in_table(unsigned long id,
 	return count;
 }
 
-int ft_enable_event_static(unsigned long id) 
-{
-	return ft_enable_event_in_table(id,
-					__start___event_table,
-					__stop___event_table);
-}
-
-
 int ft_disable_all_events_in_table(struct trace_event* te, /* start of table */
 				   struct trace_event* stop) 
 {
@@ -99,12 +88,6 @@ int ft_disable_all_events_in_table(struct trace_event* te, /* start of table */
 		te++;		
 	}
 	return count;
-}
-
-int ft_disable_all_events_static(void)
-{
-	return ft_disable_all_events_in_table(__start___event_table,
-					     __stop___event_table);	
 }
 
 int ft_disable_event_in_table(unsigned long id, 
@@ -131,12 +114,6 @@ int ft_disable_event_in_table(unsigned long id,
 	return count;
 }
 
-int ft_disable_event_static(unsigned long id)
-{
-	return ft_disable_event_in_table(id, 
-					 __start___event_table,
-					 __stop___event_table);
-}
 
 int ft_is_event_enabled_in_table(unsigned long id,
 				 struct trace_event* te, /* start of table */
@@ -151,10 +128,3 @@ int ft_is_event_enabled_in_table(unsigned long id,
 	return count;
 }
 
-
-int ft_is_event_enabled_static(unsigned long id)
-{
-	return ft_is_event_enabled_in_table(id,
-					 __start___event_table,
-					 __stop___event_table); 
-}

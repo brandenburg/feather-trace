@@ -6,6 +6,8 @@
 #include <link.h>
 #include <dlfcn.h>
 
+int foo_var = 42;
+
 int  show_lib(struct dl_phdr_info *info,
 	      size_t size, void *data)
 {
@@ -53,6 +55,13 @@ feather_callback void foo(int id, char* msg)
 
 int libcall(void);
 
+
+ int foo_fun(int var)
+{
+	printf("foo_fun() -> %d.\n", var);
+	return 84;
+}
+
 int main(int argc, char** argv)
 {
         /* first call some user space glue code that makes 
@@ -63,6 +72,7 @@ int main(int argc, char** argv)
 	dl_iterate_phdr(show_lib, NULL);
 
         ft_event1(123, foo, "Hello World!");
+	
 
         ft_enable_event(123);
 
