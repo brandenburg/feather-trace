@@ -1,7 +1,8 @@
 #define _GNU_SOURCE
 
 #include <stdio.h>
-#include "feather_userspace.h" /* user space glue code */
+#include "ft_userspace.h" /* user space glue code */
+#include "gcc-helper.h"
 
 #include <link.h>
 #include <dlfcn.h>
@@ -9,11 +10,11 @@
 int foo_var = 42;
 
 int  show_lib(struct dl_phdr_info *info,
-	      size_t size, void *data)
+	      unused(size_t size), unused(void *data))
 {
 	Dl_info so_info;
 	int ok;
-	void *handle, *start, *end, *libcall;
+	void *handle, *start, *end, *libcall, *_foo;
 
 	ok = dladdr((void*) info->dlpi_addr, &so_info);
 	if (ok) {
@@ -35,9 +36,11 @@ int  show_lib(struct dl_phdr_info *info,
 		start = dlsym(handle, "__start___event_table");
 		end   = dlsym(handle, "__stop___event_table");
 		libcall  = dlsym(handle, "libcall");
+		_foo = dlsym(handle, "foo");
 		printf("     __start___event_table = %p\n", start);
 		printf("     __stop___event_table  = %p\n", end);
 		printf("     libcall               = %p\n", libcall);
+		printf("     foo                   = %p\n", _foo);
 		dlclose(handle);
 	} else {
 		printf("     Couldn't dlopen() the object.\n");
@@ -62,17 +65,11 @@ int libcall(void);
 	return 84;
 }
 
-int main(int argc, char** argv)
+int main(unused(int argc), unused(char** argv))
 {
-        /* first call some user space glue code that makes 
-         * the text segment writable
-         */
-        INIT_FT_EVENTS();
-
 	dl_iterate_phdr(show_lib, NULL);
 
         ft_event1(123, foo, "Hello World!");
-	
 
         ft_enable_event(123);
 

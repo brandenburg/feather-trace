@@ -36,14 +36,14 @@ int map_file(const char* filename, void **addr, size_t *size)
 		} else
 			*addr = NULL;
 	} else {
-	  	printf("can't stat\n");
+	  	perror("can't stat");
 	}
 	return error;
 }
 
 
 struct timestamp {
-	long event;
+	unsigned long event;
 	void* lock;
 	long thread;
 	int nesting;
@@ -182,7 +182,7 @@ static void show_id(struct timestamp* ts, size_t count,  unsigned long id)
 }
 
 
-static void nest(struct timestamp* ts, size_t count, int id)
+static void nest(struct timestamp* ts, size_t count, unsigned long id)
 {
 	struct timestamp* exit;
 	struct timestamp* pos;
@@ -240,7 +240,7 @@ int main(int argc, char** argv)
 	ts    = (struct timestamp*) mapped;
 	count = size / sizeof(struct timestamp);		
 
-	fprintf(stderr, "Extracing from %s...\n", argv[1]);
+	fprintf(stderr, "Extracting from %s...\n", argv[1]);
 	fill_in_nesting(ts, count, id);
 	show_id(ts, count, id);
 

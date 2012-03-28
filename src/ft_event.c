@@ -25,26 +25,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "feather_trace.h"
-/* the feather trace management functions assume 
- * exclusive access to the event table
- */
+#include "ft_event.h"
 
+/* This file does not assume user space and can be emdedded in kernels. */
 
+/* x86 specific byte code */
 #define BYTE_JUMP      0xeb
 #define BYTE_JUMP_LEN  0x02
 
-/* for each event, there is an entry in the event table */
-struct trace_event {
-	long 	id;
-	long	count;
-	long	start_addr;
-	long	end_addr;
-};
-
-int ft_enable_event_in_table(unsigned long id, 
+int ft_enable_event_in_table(unsigned long id,
 			     struct trace_event* te, /* start of table */
-			     struct trace_event* stop) 
+			     struct trace_event* stop)
 {
 	int count = 0;
 	char* delta;
@@ -53,21 +44,21 @@ int ft_enable_event_in_table(unsigned long id,
 	while (te < stop) {
 		if (te->id == id && ++te->count == 1) {
 			instr  = (unsigned char*) te->start_addr;
-			/* make sure we don't clobber something wrong */
-			if (*instr == BYTE_JUMP) {				
+			/* make sure we don't clobber something that doesn't look like a jump */
+			if (*instr == BYTE_JUMP) {
 				delta  = (((char*) te->start_addr) + 1);
 				*delta = 0;
 			}
 		}
 		if (te->id == id)
 			count++;
-		te++;		
+		te++;
 	}
 	return count;
 }
 
 int ft_disable_all_events_in_table(struct trace_event* te, /* start of table */
-				   struct trace_event* stop) 
+				   struct trace_event* stop)
 {
 	int count = 0;
 	char* delta;
@@ -77,22 +68,22 @@ int ft_disable_all_events_in_table(struct trace_event* te, /* start of table */
 		if (te->count) {
 			instr  = (unsigned char*) te->start_addr;
 			if (*instr == BYTE_JUMP) {
-				delta  = (((char*) te->start_addr) 
+				delta  = (((char*) te->start_addr)
 					  + 1);
-				*delta = te->end_addr - te->start_addr - 
+				*delta = te->end_addr - te->start_addr -
 					BYTE_JUMP_LEN;
 				te->count = 0;
 				count++;
 			}
 		}
-		te++;		
+		te++;
 	}
 	return count;
 }
 
-int ft_disable_event_in_table(unsigned long id, 
+int ft_disable_event_in_table(unsigned long id,
 			      struct trace_event* te, /* start of table */
-			      struct trace_event* stop) 
+			      struct trace_event* stop)
 {
 	int count = 0;
 	char* delta;
@@ -103,13 +94,13 @@ int ft_disable_event_in_table(unsigned long id,
 			instr  = (unsigned char*) te->start_addr;
 			if (*instr == BYTE_JUMP) {
 				delta  = (((char*) te->start_addr) + 1);
-				*delta = te->end_addr - te->start_addr - 
+				*delta = te->end_addr - te->start_addr -
 					BYTE_JUMP_LEN;
 			}
 		}
 		if (te->id == id)
 			count++;
-		te++;		
+		te++;
 	}
 	return count;
 }
@@ -117,7 +108,7 @@ int ft_disable_event_in_table(unsigned long id,
 
 int ft_is_event_enabled_in_table(unsigned long id,
 				 struct trace_event* te, /* start of table */
-				 struct trace_event* stop) 
+				 struct trace_event* stop)
 {
 	int count = 0;
 	while (te < stop) {
@@ -127,4 +118,3 @@ int ft_is_event_enabled_in_table(unsigned long id,
 	}
 	return count;
 }
-

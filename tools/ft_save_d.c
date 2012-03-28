@@ -10,7 +10,7 @@
 
 #include "feather_buffer.h"
 
-struct ft_buffer* alloc_ft_buffer(unsigned int slots, 
+struct ft_buffer* alloc_ft_buffer(unsigned int slots,
 				  unsigned int size);
 
 struct daemon_config {
@@ -46,8 +46,8 @@ void* ft_flush_buffer_async(struct ft_buffer *buf, int fd)
 	cfg->fd = fd;
 	cfg->src = buf;
 	cfg->stop = 0;
-	if (pthread_create(&cfg->thread, NULL, 
-			   (void* (*)(void*)) save_daemon_thread, 
+	if (pthread_create(&cfg->thread, NULL,
+			   (void* (*)(void*)) save_daemon_thread,
 			   (void *) cfg)) {
 		free(cfg);
 		return NULL;
@@ -74,10 +74,10 @@ struct ft_buffer* alloc_flushed_ft_buffer(unsigned int slots,
 	int fd;
 	if (buf) {
 		fd = creat(file, 0600);
-		if (fd == -1 ||  !(*handle = ft_flush_buffer_async(buf, fd))) {			
+		if (fd == -1 ||  !(*handle = ft_flush_buffer_async(buf, fd))) {
 			fprintf(stderr, "Feather-Trace: Could not open flush file.\n");
 			exit(1);
-		}		
+		}
 	} else {
 		fprintf(stderr, "Feather-Trace: Could not allocate buffer!\n");
 		exit(1);

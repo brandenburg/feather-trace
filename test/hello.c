@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include "feather_userspace.h" /* user space glue code */
+#include "ft_userspace.h" /* user space glue code */
+#include "gcc-helper.h"
 
 /* foo() takes two parameters and can be used with  ft_event1()*/
 feather_callback void foo(int id, char* msg) 
@@ -7,13 +8,8 @@ feather_callback void foo(int id, char* msg)
         printf("Event %d, msg=%s\n", id, msg);
 }
 
-int main(int argc, char** argv)
+int main(unused(int argc), unused(char** argv))
 {
-        /* first call some user space glue code that makes 
-         * the text segment writable
-         */
-        INIT_FT_EVENTS();
-
         ft_event1(123, foo, "Hello World!");
 
         ft_enable_event(123);

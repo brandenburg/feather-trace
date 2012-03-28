@@ -1,0 +1,8 @@
+*.o
+*.so
+*.a
+buffer
+example
+hello
+lib
+mutex_ft2csv

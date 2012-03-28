@@ -1,5 +1,5 @@
 #!/bin/bash
 
-export LD_PRELOAD="libpthread_preload.so libft_saved.so $LD_PRELOAD"
+export LD_PRELOAD="libpthread_preload.so $LD_PRELOAD"
 
 $*

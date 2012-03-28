@@ -67,7 +67,7 @@ static inline int init_ft_buffer(struct ft_buffer*	buf,
 				 char*			slots,
 				 void* 			buffer_mem) 
 {
-	int i = 0;
+	unsigned int i = 0;
 	if (!slot_count || UINT_MAX % slot_count != slot_count - 1) {
 		/* The slot count must divide UNIT_MAX + 1 so that when it
 		 * wraps around the index correctly points to 0.
@@ -118,7 +118,7 @@ static inline void ft_buffer_finish_write(struct ft_buffer* buf, void *ptr)
 static inline int ft_buffer_read(struct ft_buffer* buf, void* dest)
 {
 	unsigned int idx;
-	if (buf->free_count == buf->slot_count) 
+	if (buf->free_count == (int) buf->slot_count) 
 		/* nothing available */
 		return 0;
 	idx = buf->read_idx % buf->slot_count;

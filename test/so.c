@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 
 #include <stdio.h>
-#include "feather_userspace.h" /* user space glue code */
+#include "ft_userspace.h" /* user space glue code */
 
 static feather_callback void libfoo(int id, char* msg) 
 {

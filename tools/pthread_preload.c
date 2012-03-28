@@ -3,11 +3,10 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
-#define FEATHER_STATIC
-#include "feather_userspace.h"
+#include "ft_userspace.h"
 
 
-struct ft_buffer* alloc_flushed_ft_buffer(unsigned int slots, 
+struct ft_buffer* alloc_flushed_ft_buffer(unsigned int slots,
 					  unsigned int size,
 					  const char* file,
 					  void** handle);
@@ -23,7 +22,7 @@ struct record {
 	void* lock;
 	long thread;
 	int nesting;
-	unsigned long long tsc;	
+	unsigned long long tsc;
 };
 
 static int  (*lock)(void*) = NULL;
@@ -45,7 +44,7 @@ static __attribute__((constructor)) void on_load(void)
 	stay_silent = getenv("FT_STAY_SILENT") != NULL;
 
 	out("loading Feather-Trace pthread preload lib\n");
-	
+
 	lock    = dlsym(RTLD_NEXT, "pthread_mutex_lock");
 	unlock  = dlsym(RTLD_NEXT, "pthread_mutex_unlock");
 	trylock = dlsym(RTLD_NEXT, "pthread_mutex_trylock");
@@ -53,11 +52,10 @@ static __attribute__((constructor)) void on_load(void)
 	out("loaded: lock=%p unlock=%p trylock=%p self=%p\n",
 	       lock, unlock, trylock, self);
 
-	INIT_FT_EVENTS();
 	sprintf(name, "mutex-%d.ft", getpid());
-	trace_buf = alloc_flushed_ft_buffer(262144, sizeof(struct record), 
+	trace_buf = alloc_flushed_ft_buffer(262144, sizeof(struct record),
 					    name, &handle);
-    
+
 	ft_enable_event(1000);
 	ft_enable_event(1001);
 }
@@ -66,12 +64,12 @@ static __attribute__((destructor)) void on_unload(void)
 {
 	out("unloading Feather-Trace pthread preload lib...");
 	fflush(stderr);
-	ft_flush_buffer_stop(handle);	
+	ft_flush_buffer_stop(handle);
 	out("ok.\n");
 }
 
 
-feather_callback void mutex_rec(long id, void* mutex, int failed)
+static feather_callback void mutex_rec(long id, void* mutex, int failed)
 {
 	struct record* rec;
 	if (!trace_buf || failed)

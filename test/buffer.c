@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include "feather_userspace.h" /* user space glue code */
+#include "ft_userspace.h" /* user space glue code */
+#include "gcc-helper.h"
 
 struct event_data
 {
 	int  id;
-	char msg[40];	
+	char msg[40];
 };
 
 struct ft_buffer* buf;
@@ -19,11 +20,9 @@ feather_callback void foo(int id, char* msg)
 	}
 }
 
-int main(int argc, char** argv)
+int main(unused(int argc), unused(char** argv))
 {
 	struct event_data data;
-
-        INIT_FT_EVENTS();
 
 	buf = alloc_ft_buffer(4, sizeof(struct event_data));
 	if (!buf)
@@ -40,7 +39,7 @@ int main(int argc, char** argv)
 
         ft_event1(234, foo, "Great, thanks!");
 
-        ft_event1(123, foo, "Goodbye World!");	
+        ft_event1(123, foo, "Goodbye World!");
 
 	while (ft_buffer_read(buf, &data)) {
 		printf("found in buffer: %d->%s\n", data.id, data.msg);

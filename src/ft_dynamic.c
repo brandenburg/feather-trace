@@ -6,15 +6,17 @@
 #include <string.h>
 #include <sys/mman.h>
 
-#include "feather_userspace.h"
+#include "ft_event.h"
+#include "ft_userspace.h"
 
-/* for each trigger, there is an entry in the event table */
-struct trace_event {
-	long 	id;
-	long	count;
-	long	start_addr;
-	long	end_addr;
-};
+int init_ft_events_in_table(struct trace_event* start, struct trace_event* stop);
+
+typedef  int (*iterator_fun_id_t)(unsigned long id,
+				struct trace_event* start,
+				struct trace_event* stop);
+
+typedef  int (*iterator_fun_t)(	struct trace_event* start,
+				struct trace_event* stop);
 
 struct iterator_state {
 	int count;
@@ -25,7 +27,8 @@ struct iterator_state {
 };
 
 static int  so_iterator(struct dl_phdr_info *info,
-		 size_t size, void *data)
+			size_t size __attribute__((unused)),
+			void *data)
 {
 	struct iterator_state* state = (struct iterator_state*) data;
 	void *handle, *start, *end;
@@ -36,10 +39,11 @@ static int  so_iterator(struct dl_phdr_info *info,
 		end   = dlsym(handle, "__stop___event_table");
 		if (state->use_id)
 			state->count += state->fun_id(state->id, start, end);
-		else 
+		else
 			state->count += state->fun(start, end);
 		dlclose(handle);
-	}		
+	} else
+		printf("Could not open.\n");
 	return 0;
 }
 
@@ -50,7 +54,7 @@ int for_each_table_id(unsigned long id, iterator_fun_id_t fun)
 	state.id = id;
 	state.use_id = 1;
 	state.fun_id = fun;
-	dl_iterate_phdr(so_iterator, &state);	
+	dl_iterate_phdr(so_iterator, &state);
 	return state.count;
 }
 
@@ -60,6 +64,31 @@ int for_each_table(iterator_fun_t fun)
 	state.count = 0;
 	state.use_id = 0;
 	state.fun = fun;
-	dl_iterate_phdr(so_iterator, &state);	
+	dl_iterate_phdr(so_iterator, &state);
 	return state.count;
+}
+
+int ft_enable_event(unsigned long id)
+{
+	return for_each_table_id(id, ft_enable_event_in_table);
+}
+
+int ft_disable_all_events(void)
+{
+	return for_each_table(ft_disable_all_events_in_table);
+}
+
+int ft_disable_event(unsigned long id)
+{
+	return for_each_table_id(id, ft_disable_event_in_table);
+}
+
+int ft_is_event_enabled(unsigned long id)
+{
+	return for_each_table_id(id, ft_is_event_enabled_in_table);
+}
+
+int init_ft_events(void)
+{
+	return for_each_table(init_ft_events_in_table);
 }
