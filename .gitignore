@@ -1,8 +1,7 @@
 *.o
 *.so
 *.a
-buffer
-example
-hello
-lib
+buffer_example
+static_example
+dynamic_example
 mutex_ft2csv

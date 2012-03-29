@@ -20,22 +20,19 @@ FT_DYNAMIC = ${FT_SRC} ft_dynamic.o
 
 .PHONY : all clean
 
-TARGETS = example hello buffer lib libpthread_preload.so libft_saved.so \
-	  mutex_ft2csv libso.so
+TARGETS = buffer_example static_example dynamic_example libpthread_preload.so mutex_ft2csv
 
 all: ${TARGETS}
 
-example: ${FT_STATIC}  example.o
+static_example: ${FT_STATIC}  static_example.o
 
-hello:  ${FT_STATIC}  hello.o
+buffer_example:  ${FT_STATIC}  buffer_example.o
 
-buffer:  ${FT_STATIC}  buffer.o
+libso.so: example_lib.o
+	${CC} ${LDFLAGS} -shared -T feather-trace.ld.S -o libso.so example_lib.o
 
-libso.so: so.o
-	${CC} ${LDFLAGS} -shared -T feather-trace.ld.S -o libso.so so.o
-
-lib:  ${FT_DYNAMIC}  lib.o libso.so
-	${CC} ${LDFLAGS} -L. -o lib -lso -ldl  ${FT_DYNAMIC} lib.o
+dynamic_example:  ${FT_DYNAMIC}  dynamic_example.o libso.so
+	${CC} ${LDFLAGS} -L. -o dynamic_example -lso -ldl  ${FT_DYNAMIC} dynamic_example.o
 
 libpthread_preload.so: pthread_preload.o ${FT_STATIC} libft_saved.so
 	${CC} ${LDFLAGS} -L. -lft_saved -shared -T feather-trace.ld.S -o libpthread_preload.so pthread_preload.o ${FT_STATIC}
@@ -46,5 +43,5 @@ libft_saved.so: ft_save_d.o
 mutex_ft2csv: mutex_ft2csv.o
 
 clean:
-	rm -rf *.o ${TARGETS}
+	rm -rf *.o *.so ${TARGETS}
 
