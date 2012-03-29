@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
+
 #include "ft_userspace.h"
 
 
@@ -22,7 +23,7 @@ struct record {
 	void* lock;
 	long thread;
 	int nesting;
-	unsigned long long tsc;
+	unsigned long long timestamp;
 };
 
 static int  (*lock)(void*) = NULL;
@@ -33,7 +34,7 @@ static long (*self)(void) = NULL;
 static struct ft_buffer* trace_buf = NULL;
 static void* handle = NULL;
 static int stay_silent = 0;
-
+static int use_cycle_counter = 0;
 
 #define out(fmt, args...) do { if (!stay_silent) {fprintf(stderr, fmt, ## args);} } while (0);
 
@@ -41,9 +42,10 @@ static __attribute__((constructor)) void on_load(void)
 {
 	char name[16];
 
-	stay_silent = getenv("FT_STAY_SILENT") != NULL;
+	stay_silent       = getenv("FT_STAY_SILENT") != NULL;
+	use_cycle_counter = getenv("FT_USE_CYCLE_COUNTER") != NULL;
 
-	out("loading Feather-Trace pthread preload lib\n");
+	out("loading Feather-Trace pthread proxy\n");
 
 	lock    = dlsym(RTLD_NEXT, "pthread_mutex_lock");
 	unlock  = dlsym(RTLD_NEXT, "pthread_mutex_unlock");
@@ -77,7 +79,10 @@ static feather_callback void mutex_rec(long id, void* mutex, int failed)
 
 	if (ft_buffer_start_write(trace_buf, (void**) &rec)) {
 		rec->thread = self();
-		rec->tsc = ft_read_tsc();
+		if (use_cycle_counter)
+			rec->timestamp = ft_read_tsc();
+		else
+			rec->timestamp = microtime();
 		rec->event = id;
 		rec->lock = mutex;
 		ft_buffer_finish_write(trace_buf, rec);

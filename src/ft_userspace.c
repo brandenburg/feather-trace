@@ -4,10 +4,20 @@
 #include <unistd.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/time.h>
+#include <time.h>
+
 
 #include "feather_buffer.h"
 #include "ft_event.h"
 #include "ft_userspace.h"
+
+unsigned long long microtime(void)
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return ((unsigned long long) tv.tv_sec) * 1E6 + tv.tv_usec;
+}
 
 struct ft_buffer* alloc_ft_buffer(unsigned int slots,
 				  unsigned int size)

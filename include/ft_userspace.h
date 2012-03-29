@@ -13,4 +13,7 @@ struct ft_buffer* alloc_ft_buffer(unsigned int slots,
 
 int init_ft_events(void);
 
+/* wall-clock time in microseconds */
+unsigned long long microtime(void);
+
 #endif
