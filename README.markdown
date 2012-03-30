@@ -15,7 +15,7 @@ Simple examples demonstrating how to embed event triggers in statically and dyna
 
 
 ### Wait-Free Event Buffer
-Feather-Trace includes simple FIFO buffers that are intended to be used to collect trace records without introducing blocking. These buffers support multiple concurrent readers, but at most one concurrent reader. Write operations are completely wait-free, that is, a write will complete independent of the progress (or lack thereof) of other threads. Read operations are wait-free as well in that they won't block, but a reader will fail to read finished writes if there exists an earlier-started incomplete write (i.e., the FIFO order is defined based on the write start times).
+Feather-Trace includes simple FIFO buffers that are intended to be used to collect trace records without introducing blocking. These buffers support multiple concurrent writers, but at most one concurrent reader. Write operations are completely wait-free, that is, a write will complete independent of the progress (or lack thereof) of other threads. Read operations are wait-free in the senes that they won't block, but a reader will not read finished writes preceded by an earlier-started, incomplete write (i.e., the FIFO order is defined based on the write start times).
 
 Feather-Trace buffers are statically pre-allocated.  To reduce overheads, the capacity of a Feather-Trace record is required to be a power of 2.
 
