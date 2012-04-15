@@ -1,5 +1,8 @@
 /* Copyright (c) 2007-2012 Björn Brandenburg, <bbb@mpi-sws.org>
  *
+ * 2012 Andrea Bastoni <bastoni@sprg.uniroma2.it>
+ * 	- Adaptations for allocation/deallocation tracking
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -75,8 +78,7 @@ static __attribute__((constructor)) void on_load(void)
 	out("Loading Feather-Trace Heap Statistics proxy\n");
 
 	the_malloc  = dlsym(RTLD_NEXT, "malloc");
-	/* FIXME: See below */
-	/* the_calloc  = dlsym(RTLD_NEXT, "calloc"); */
+	the_calloc  = dlsym(RTLD_NEXT, "calloc");
 	the_realloc = dlsym(RTLD_NEXT, "realloc");
 	the_free    = dlsym(RTLD_NEXT, "free");
 
@@ -87,7 +89,7 @@ static __attribute__((constructor)) void on_load(void)
 	trace_buf = alloc_flushed_ft_buffer(262144, sizeof(struct record),
 					    name, &handle);
 
-	for (i = 1000; i < 1003; i++)
+	for (i = 1000; i < 1004; i++)
 		ft_enable_event(i);
 }
 
@@ -140,16 +142,30 @@ void free(void *ptr)
 	return;
 }
 
-/* FIXME: calloc is actually called by dlsym. Remapping it here will cause
- * to segfault (invalid ptr). One solution may be to fake the allocation
- * for the calloc needed by dlsym() on the stack.
- */
-/*
+/* Quick and dirty home-made allocation for dlsym calloc */
+static void *first_calloc_call(size_t nmemb, size_t size)
+{
+	static char heap_static_alloc[128];
+	void *ptr = heap_static_alloc;
+
+	if (nmemb * size < 128)
+		return ptr;
+	else
+		exit(EXIT_FAILURE);
+}
+
 void *calloc(size_t nmemb, size_t size)
 {
-	void *ptr = the_calloc(nmemb, size);
-	ft_event2(1003, heapstat_rec, (nmemb * size), ptr == NULL);
+	static int first_call = 1;
+	void *ptr;
+
+	if (first_call) {
+		ptr = first_calloc_call(nmemb, size);
+		first_call = 0;
+	} else {
+		ptr = the_calloc(nmemb, size);
+		ft_event3(1003, heapstat_rec, ptr, (nmemb * size), ptr == NULL);
+	}
 	return ptr;
 }
-*/
 
