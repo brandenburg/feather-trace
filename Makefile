@@ -4,7 +4,7 @@ host-arch := $(shell uname -m | \
 # ARCH -- what architecture are we compiling for?
 ARCH ?= ${host-arch}
 
-flags-i386     = -m32
+flags-i386     = -m32 -fPIC
 flags-x86_64   = -m64 -fPIC
 CFLAGS  = ${flags-${ARCH}} -Wall -Wextra -Werror -g -Iinclude/
 LDFLAGS = ${flags-${ARCH}} -ldl
