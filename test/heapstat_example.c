@@ -53,7 +53,6 @@ int main(void)
 	v = malloc_init_vector(size);
 	if (!v)
 		return 1;
-
 	print_vect(v, size);
 
 	v1 = malloc_init_vector(size*2);
