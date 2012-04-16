@@ -81,6 +81,7 @@ struct timestamp {
 	unsigned long ptr;
 	unsigned long size;
 	long thread;
+	long callsite;
 	unsigned long long timestamp;
 };
 
@@ -125,11 +126,11 @@ static int find_matching_free(struct timestamp *start,
 
 static inline void print_csv(struct timestamp *start, struct timestamp *stop)
 {
-	/* start, stop, hold for <amount>, owner, ptr, size */
-	printf("%llu, %llu, %llu, 0x%lx, %p, %lu\n",
-			start->timestamp, stop->timestamp,
-			stop->timestamp - start->timestamp,
-			start->thread, (void *)start->ptr, start->size);
+	/* start, stop, hold for <amount>, owner, alloc-callsite, free-callsite, ptr, size */
+	printf("%llu, %llu, %llu, 0x%lx, 0x%lx, 0x%lx, %p, %lu\n",
+	       start->timestamp, stop->timestamp,
+	       stop->timestamp - start->timestamp,
+	       start->thread, start->callsite, stop->callsite, (void *)start->ptr, start->size);
 }
 
 static void show_csv(struct timestamp *ts, size_t count)
@@ -144,9 +145,9 @@ static void show_csv(struct timestamp *ts, size_t count)
 		if (stop) {
 			/* a different thread freed the space */
 			fprintf(stderr,
-				"mismatch %p mallocd by %lx, "
+				"mismatch %p malloc'ed by 0x%lx/0x%lx, "
 				"freed by %lx, check=%d\n",
-				(void *)start->ptr, start->thread,
+				(void *)start->ptr, start->thread, start->callsite,
 				stop->thread, check_owner(start, stop));
 
 			/* nonetheless it's valid */
@@ -155,9 +156,9 @@ static void show_csv(struct timestamp *ts, size_t count)
 		} else {
 			fprintf(stderr,
 				"free missing: %p, possibly lost %lu, "
-				"mallocd by 0x%lx at %10llu\n",
+				"mallocd by 0x%lx/0x%lx at %10llu\n",
 				(void *)ts->ptr, ts->size,
-				ts->thread, ts->timestamp);
+				ts->thread, ts->callsite, ts->timestamp);
 			incomplete++;
 		}
 	}
@@ -185,8 +186,8 @@ static void show_ids(struct timestamp *ts, size_t count,
 static void dump(struct timestamp *ts, size_t count)
 {
 	while (count--) {
-		printf("%6lu, 0x%lx, %p, %lu, %10llu\n", ts->event, ts->thread,
-		       (void *)ts->ptr, ts->size, ts->timestamp);
+		printf("%6lu, 0x%lx, 0x%lx, %p, %lu, %10llu\n", ts->event, ts->thread,
+		       ts->callsite, (void *)ts->ptr, ts->size, ts->timestamp);
 		ts++;
 	}
 }

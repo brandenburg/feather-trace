@@ -52,6 +52,7 @@ struct record {
 	unsigned long ptr;
 	size_t size;
 	long thread;
+	long callsite;
 	unsigned long long timestamp;
 };
 
@@ -117,16 +118,17 @@ static __attribute__((constructor)) void on_load(void)
 
 static __attribute__((destructor)) void on_unload(void)
 {
-	out("unloading Feather-Trace pthread preload lib...");
+	out("unloading Feather-Trace heapstat preload lib...");
 	fflush(stderr);
 	ft_flush_buffer_stop(handle);
 	out("ok.\n");
 }
 
 static feather_callback
-void heapstat_rec(long id, void* ptr, size_t size, int failed)
+void heapstat_rec(long id, void* ptr, long size, long ret_addr)
 {
 	struct record* rec;
+	int failed = id != FREE && !ptr;
 	if (!trace_buf || failed)
 		return;
 
@@ -138,6 +140,7 @@ void heapstat_rec(long id, void* ptr, size_t size, int failed)
 			rec->timestamp = microtime();
 		rec->event = id;
 		rec->ptr = (unsigned long) ptr;
+		rec->callsite = ret_addr;
 		rec->size = size;
 		ft_buffer_finish_write(trace_buf, rec);
 	}
@@ -147,21 +150,21 @@ void *malloc(size_t size)
 {
 	void *ptr;
 	ptr = the_malloc(size);
-	ft_event3(1000, heapstat_rec, ptr, size, ptr == NULL);
+	ft_event3(1000, heapstat_rec, ptr, size, __builtin_return_address(0));
 	return ptr;
 }
 
 void *realloc(void *orig_ptr, size_t size)
 {
 	void *ptr = the_realloc(orig_ptr, size);
-	ft_event3(1001, heapstat_rec, ptr, size, 0);
+	ft_event3(1001, heapstat_rec, ptr, size, __builtin_return_address(0));
 	return ptr;
 }
 
 void free(void *ptr)
 {
 	the_free(ptr);
-	ft_event3(1002, heapstat_rec, ptr, 0, 0);
+	ft_event3(1002, heapstat_rec, ptr, 0, __builtin_return_address(0));
 	return;
 }
 
@@ -187,7 +190,7 @@ void *calloc(size_t nmemb, size_t size)
 		first_call = 0;
 	} else {
 		ptr = the_calloc(nmemb, size);
-		ft_event3(1003, heapstat_rec, ptr, (nmemb * size), ptr == NULL);
+		ft_event3(1003, heapstat_rec, ptr, (nmemb * size), __builtin_return_address(0));
 	}
 	return ptr;
 }
