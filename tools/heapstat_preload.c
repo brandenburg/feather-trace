@@ -55,8 +55,12 @@ struct record {
 	unsigned long long timestamp;
 };
 
-static void* (*the_malloc)(size_t) = NULL;
-static void* (*the_calloc)(size_t, size_t) = NULL;
+static void load_proxies(void);
+static void* malloc_stub(size_t);
+static void* calloc_stub(size_t, size_t);
+
+static void* (*the_malloc)(size_t) = malloc_stub;
+static void* (*the_calloc)(size_t, size_t) = calloc_stub;
 static void* (*the_realloc)(void*, size_t) = NULL;
 static void  (*the_free)(void*) = NULL;
 
@@ -67,14 +71,8 @@ static int use_cycle_counter = 0;
 
 #define out(fmt, args...) do { if (!stay_silent) {fprintf(stderr, fmt, ## args);} } while (0);
 
-static __attribute__((constructor)) void on_load(void)
+static void load_proxies(void)
 {
-	char name[18];
-	int  i;
-
-	stay_silent       = getenv("FT_STAY_SILENT") != NULL;
-	use_cycle_counter = getenv("FT_USE_CYCLE_COUNTER") != NULL;
-
 	out("Loading Feather-Trace Heap Statistics proxy\n");
 
 	the_malloc  = dlsym(RTLD_NEXT, "malloc");
@@ -84,6 +82,30 @@ static __attribute__((constructor)) void on_load(void)
 
 	out("Loading the_malloc=%p, the_calloc=%p, the_realloc=%p, the_free=%p\n",
 			the_malloc, the_calloc, the_realloc, the_free);
+}
+
+static void* malloc_stub(size_t val)
+{
+	load_proxies();
+	return the_malloc(val);
+}
+
+static void* calloc_stub(size_t num, size_t size)
+{
+	load_proxies();
+	return the_calloc(num, size);
+}
+
+static __attribute__((constructor)) void on_load(void)
+{
+	char name[18];
+	int  i;
+
+	stay_silent       = getenv("FT_STAY_SILENT") != NULL;
+	use_cycle_counter = getenv("FT_USE_CYCLE_COUNTER") != NULL;
+
+	if (!the_malloc)
+		load_proxies();
 
 	sprintf(name, "heapstat-%d.ft", getpid());
 	trace_buf = alloc_flushed_ft_buffer(262144, sizeof(struct record),
@@ -123,7 +145,8 @@ void heapstat_rec(long id, void* ptr, size_t size, int failed)
 
 void *malloc(size_t size)
 {
-	void *ptr = the_malloc(size);
+	void *ptr;
+	ptr = the_malloc(size);
 	ft_event3(1000, heapstat_rec, ptr, size, ptr == NULL);
 	return ptr;
 }
@@ -168,4 +191,3 @@ void *calloc(size_t nmemb, size_t size)
 	}
 	return ptr;
 }
-
