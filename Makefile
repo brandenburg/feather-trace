@@ -20,7 +20,7 @@ FT_DYNAMIC = ${FT_SRC} ft_dynamic.o
 
 .PHONY : all clean
 
-TARGETS = buffer_example static_example dynamic_example mutex_example mutex_example_used libpthread_preload.so mutex_ft2csv heapstat_example libheapstat_preload.so heapstat_ft2csv
+TARGETS = buffer_example static_example dynamic_example mutex_example libpthread_preload.so mutex_ft2csv heapstat_example libheapstat_preload.so heapstat_ft2csv
 
 all: ${TARGETS}
 
