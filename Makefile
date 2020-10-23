@@ -31,9 +31,6 @@ buffer_example:  ${FT_STATIC}  buffer_example.o
 mutex_example: mutex_example.o
 	${CC} mutex_example.o ${LDFLAGS} -lpthread -o mutex_example
 
-mutex_example: mutex_example_used.o
-	${CC} mutex_example_used.o ${LDFLAGS} -lpthread -o mutex_example_used
-
 heapstat_example: heapstat_example.o
 	${CC} ${LDFLAGS} -o $@ $^
 
