@@ -29,7 +29,7 @@ static_example: ${FT_STATIC}  static_example.o
 buffer_example:  ${FT_STATIC}  buffer_example.o
 
 mutex_example: mutex_example.o
-	${CC} ${LDFLAGS} -lpthread -o mutex_example mutex_example.o
+	${CC} mutex_example.o ${LDFLAGS} -lpthread -o mutex_example
 
 heapstat_example: heapstat_example.o
 	${CC} ${LDFLAGS} -o $@ $^
@@ -38,16 +38,16 @@ libso.so: example_lib.o
 	${CC} ${LDFLAGS} -shared -T feather-trace.ld.S -o libso.so example_lib.o
 
 dynamic_example:  ${FT_DYNAMIC}  dynamic_example.o libso.so
-	${CC} ${LDFLAGS} -L. -o dynamic_example -lso -ldl  ${FT_DYNAMIC} dynamic_example.o
+	${CC} dynamic_example.o ${LDFLAGS} -L. -o dynamic_example -lso -ldl  ${FT_DYNAMIC}
 
 libpthread_preload.so: pthread_preload.o ${FT_STATIC} libft_saved.so
-	${CC} ${LDFLAGS} -L. -lft_saved -shared -T feather-trace.ld.S -o libpthread_preload.so pthread_preload.o ${FT_STATIC}
+	${CC} pthread_preload.o ${LDFLAGS} -L. -lft_saved -shared -T feather-trace.ld.S -o libpthread_preload.so ${FT_STATIC}
 
 libheapstat_preload.so: heapstat_preload.o ${FT_STATIC} libft_saved.so
 	${CC} ${LDFLAGS} -L. -lpthread -lft_saved -shared -T feather-trace.ld.S -o $@ $< ${FT_STATIC}
 
 libft_saved.so: ft_save_d.o
-	${CC} ${LDFLAGS} -lpthread -shared -T feather-trace.ld.S  -o libft_saved.so ft_save_d.o
+	${CC} ft_save_d.o ${LDFLAGS} -lpthread -shared -T feather-trace.ld.S  -o libft_saved.so
 
 mutex_ft2csv: mutex_ft2csv.o
 
